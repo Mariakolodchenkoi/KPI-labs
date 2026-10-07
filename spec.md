@@ -1,6 +1,7 @@
 # spec for data model: Online clothing store
 
 ## 1. Intention
+Розробити модель даних для онлайн магазину одягу, яка підтримує управління замовленням та зберіганням історії
 
 ## 2. Entities and attributes
 
@@ -33,7 +34,7 @@
 5. **OrderItem**
 - `id` *[PK, string]*: ідентифікатор
 - `orderId` *[FK -> Order.id, string]*: замовлення
-- `productId` *[FK -> Order.id, string]*: продукт
+- `productId` *[FK -> Product.id, string]*: продукт
 - `quantity` *[number]*: кількість одиниць товару
 - `unitPrice` *[number]*: ціна
 
