@@ -20,10 +20,10 @@ rectangle "Онлайн-магазин одягу" {
 }
 
 Guest --> UC1  
+Guest --> UC2
 Guest --> UC3
 Guest --> UC4
 
-AuthUser --> UC2
 AuthUser --> UC3
 AuthUser --> UC4
 AuthUser --> UC5
@@ -36,6 +36,5 @@ PaymentService --> UC7
 
 UC5 ..> UC7 : <<include>>
 UC4 ..> UC5 : <<extend>>
-UC5 ..> UC2 : <<extend>>  
 
 @enduml
