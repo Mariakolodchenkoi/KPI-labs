@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Guest as "Guest"
+actor AuthUser as "Authenticated user"
+actor Admin as "Admin"
+actor PaymentService as "Payment service"
+
+Guest <|-- AuthUser : generalization
+
+rectangle "Онлайн-магазин одягу" {
+    usecase "UC1: Реєструватися" as UC1
+    usecase "UC2: Входити в акаунт" as UC2
+    usecase "UC3: Переглядати та фільтрувати каталог товарів" as UC3
+    usecase "UC4: Керувати вмістом кошика" as UC4
+    usecase "UC5: Оформлювати та оплачувати замовлення" as UC5
+    usecase "UC6: Керувати каталогом та складом" as UC6
+    usecase "UC7: Підтверджувати або відхиляти оплату" as UC7
+}
+
+Guest --> UC1  
+Guest --> UC3
+Guest --> UC4
+
+AuthUser --> UC2
+AuthUser --> UC3
+AuthUser --> UC4
+AuthUser --> UC5
+
+Admin --> UC2
+Admin --> UC3
+Admin --> UC6
+
+PaymentService --> UC7
+
+UC5 ..> UC7 : <<include>>
+UC4 ..> UC5 : <<extend>>
+UC5 ..> UC2 : <<extend>>  
+
+@enduml
