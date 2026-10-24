@@ -5,6 +5,7 @@ erDiagram
     CUSTOMER ||--o{ ORDER : places
     ORDER ||--|{ ORDER_ITEM : contains
     PRODUCT ||--o{ ORDER_ITEM : ordered_in
+    Order ||--o{ PAYMENT : paid_by
     
   
     CUSTOMER {
@@ -12,7 +13,8 @@ erDiagram
         string email
         string fullName
         string phoneNumber
-        date createdAt
+        date createdAt 
+        string role
     }
 
     CATEGORY {
@@ -43,5 +45,14 @@ erDiagram
         string productId FK
         number quantity
         number unitPrice
+    }
+
+    
+    PAYMENT {
+    string id PK
+    string orderId FK
+    number amount
+    string status
+    date createdAt
     }
 ```
