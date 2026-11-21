@@ -1,0 +1,49 @@
+@startuml
+title UC5 — S2: Оформлення замовлення після зміни кількості товарів
+
+skinparam sequenceMessageAlign left
+autonumber
+
+actor "Authenticated user\n(Customer)" as Customer
+participant "CheckoutController" as Ctrl
+participant "OrderService" as OrderSvc
+participant "ProductService" as ProdSvc
+participant "PaymentService\n(Payment service)" as PaySvc
+
+Customer -> Ctrl : updateQuantityAndCheckout(customerId, orderItemId, newQuantity, paymentData)
+activate Ctrl
+
+Ctrl -> OrderSvc : processCheckoutWithUpdatedQuantity(customerId, orderItemId, newQuantity, paymentData)
+activate OrderSvc
+
+opt Змінено quantity обраного товару
+    OrderSvc -> ProdSvc : verifyProductPrice(productId, newQuantity)
+    activate ProdSvc
+    ProdSvc --> OrderSvc : productPriceData(price, title)
+    deactivate ProdSvc
+
+    OrderSvc -> OrderSvc : updateOrderItemAndRecalculateTotal(orderItemId, newQuantity, price)
+end
+
+OrderSvc -> PaySvc : processPayment(orderId, order.totalAmount)
+activate PaySvc
+PaySvc --> OrderSvc : paymentGatewayResult(status)
+deactivate PaySvc
+
+alt Успішна транзакція (status == "SUCCESS")
+    OrderSvc -> PaySvc : recordPayment(orderId, totalAmount, status="SUCCESS")
+    activate PaySvc
+    PaySvc --> OrderSvc : paymentSaved(paymentId)
+    deactivate PaySvc
+
+    OrderSvc -> OrderSvc : createPaidOrder(orderId, status="PAID")
+    OrderSvc --> Ctrl : orderCreated(orderId, status="PAID", totalAmount)
+else Транзакцію не підтверджено (status != "SUCCESS")
+    OrderSvc --> Ctrl : paymentNotCompleted(orderId, status, totalAmount)
+end
+
+deactivate OrderSvc
+Ctrl --> Customer : renderOrderStatus(orderId, status, totalAmount)
+deactivate Ctrl
+
+@enduml
