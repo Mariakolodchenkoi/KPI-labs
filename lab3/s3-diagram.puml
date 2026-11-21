@@ -26,8 +26,8 @@ alt Оплату відхилено або виникла помилка (status
     PaySvc --> OrderSvc : paymentSaved(paymentId)
     deactivate PaySvc
 
-    OrderSvc -> OrderSvc : keepOrderPendingPayment(orderId, status="PAID")
-    OrderSvc --> Ctrl : paymentFailed(orderId, status="PENDING_PAYMENT")
+    OrderSvc -> OrderSvc : keepOrderPendingPayment(orderId, status="PENDING_PAYMENT")
+    OrderSvc --> Ctrl : paymentFailed(orderId, status="PENDING_PAYMENT", keepCart=true)
 else Повторна оплата успішна (status == "SUCCESS")
     OrderSvc -> PaySvc : recordPaymentAttempt(orderId, totalAmount, status="SUCCESS")
     activate PaySvc
