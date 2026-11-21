@@ -1,0 +1,49 @@
+@startuml
+title UC5 — S3: Неуспішна спроба оплати замовлення
+
+skinparam sequenceMessageAlign left
+autonumber
+
+actor "Authenticated user\n(Customer)" as Customer
+participant "CheckoutController" as Ctrl
+participant "OrderService" as OrderSvc
+participant "PaymentService\n(Payment service)" as PaySvc
+
+Customer -> Ctrl : submitPayment(orderId, paymentDetails)
+activate Ctrl
+
+Ctrl -> OrderSvc : processOrderPayment(orderId, order.totalAmount, paymentDetails)
+activate OrderSvc
+
+OrderSvc -> PaySvc : chargePayment(orderId, order.totalAmount, paymentDetails)
+activate PaySvc
+PaySvc --> OrderSvc : paymentGatewayResponse(status)
+deactivate PaySvc
+
+alt Оплату відхилено або виникла помилка (status != "SUCCESS")
+    OrderSvc -> PaySvc : recordPaymentAttempt(orderId, totalAmount, status="DECLINED")
+    activate PaySvc
+    PaySvc --> OrderSvc : paymentSaved(paymentId)
+    deactivate PaySvc
+
+    OrderSvc -> OrderSvc : keepOrderPendingPayment(orderId, status="PAID")
+    OrderSvc --> Ctrl : paymentFailed(orderId, status="PENDING_PAYMENT")
+else Повторна оплата успішна (status == "SUCCESS")
+    OrderSvc -> PaySvc : recordPaymentAttempt(orderId, totalAmount, status="SUCCESS")
+    activate PaySvc
+    PaySvc --> OrderSvc : paymentSaved(paymentId)
+    deactivate PaySvc
+
+    OrderSvc -> OrderSvc : markOrderPaid(orderId, status="PAID")
+    OrderSvc --> Ctrl : paymentSucceeded(orderId, status="PAID")
+end
+
+opt Користувач повторно не оплачує замовлення
+    OrderSvc -> OrderSvc : keepCartItemsAvailable(customerId)
+end
+
+deactivate OrderSvc
+Ctrl --> Customer : renderPaymentOutcome(orderId, status)
+deactivate Ctrl
+
+@enduml
