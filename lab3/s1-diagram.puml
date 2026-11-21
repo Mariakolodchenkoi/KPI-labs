@@ -21,7 +21,7 @@ OrderSvc -> OrderSvc : validateAddress(deliveryAddress)
 loop Перевірка товарів і позицій OrderItem
     OrderSvc -> ProdSvc : verifyProduct(productId, quantity)
     activate ProdSvc
-    ProdSvc --> OrderSvc : productDetails(price, stockQuantity)
+    ProdSvc --> OrderSvc : productDetails(price, title)
     deactivate ProdSvc
 end
 
@@ -39,7 +39,6 @@ alt Оплата успішна (SUCCESS)
     deactivate PaySvc
 
     OrderSvc -> OrderSvc : setOrderPaidAndClearCart(orderId, customerId)
-    deactivate OrderSvc
     OrderSvc --> Ctrl : orderConfirmed(orderId, status="PAID")
 else Оплату відхилено (DECLINED)
     OrderSvc -> PaySvc : savePayment(orderId, totalAmount, status="DECLINED")
@@ -51,6 +50,7 @@ else Оплату відхилено (DECLINED)
     OrderSvc --> Ctrl : paymentDeclined(orderId, status="PENDING_PAYMENT")
 end
 
+deactivate OrderSvc
 Ctrl --> User : renderOrderOutcome(orderId, status)
 deactivate Ctrl
 
