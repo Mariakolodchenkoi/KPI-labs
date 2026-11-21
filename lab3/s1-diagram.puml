@@ -1,0 +1,57 @@
+@startuml
+title UC5 — S1: Успішне оформлення та оплата замовлення
+
+skinparam sequenceMessageAlign left
+autonumber
+
+actor "Authenticated user" as User
+participant "CheckoutController" as Ctrl
+participant "OrderService" as OrderSvc
+participant "ProductService" as ProdSvc
+participant "Payment service" as PaySvc
+
+User -> Ctrl : submitOrder(deliveryAddress, items)
+activate Ctrl
+
+Ctrl -> OrderSvc : createOrder(customerId, deliveryAddress, items)
+activate OrderSvc
+
+OrderSvc -> OrderSvc : validateAddress(deliveryAddress)
+
+loop Перевірка товарів і позицій OrderItem
+    OrderSvc -> ProdSvc : verifyProduct(productId, quantity)
+    activate ProdSvc
+    ProdSvc --> OrderSvc : productDetails(price, stockQuantity)
+    deactivate ProdSvc
+end
+
+OrderSvc -> OrderSvc : calculateOrderTotal(items, freeShipping=true)
+
+OrderSvc -> PaySvc : processPayment(orderId, totalAmount)
+activate PaySvc
+PaySvc --> OrderSvc : paymentResult(status)
+deactivate PaySvc
+
+alt Оплата успішна (SUCCESS)
+    OrderSvc -> PaySvc : savePayment(orderId, totalAmount, status="SUCCESS")
+    activate PaySvc
+    PaySvc --> OrderSvc : paymentId
+    deactivate PaySvc
+
+    OrderSvc -> OrderSvc : setOrderPaidAndClearCart(orderId, customerId)
+    deactivate OrderSvc
+    OrderSvc --> Ctrl : orderConfirmed(orderId, status="PAID")
+else Оплату відхилено (DECLINED)
+    OrderSvc -> PaySvc : savePayment(orderId, totalAmount, status="DECLINED")
+    activate PaySvc
+    PaySvc --> OrderSvc : paymentId
+    deactivate PaySvc
+
+    OrderSvc -> OrderSvc : setOrderPendingPayment(orderId)
+    OrderSvc --> Ctrl : paymentDeclined(orderId, status="PENDING_PAYMENT")
+end
+
+Ctrl --> User : renderOrderOutcome(orderId, status)
+deactivate Ctrl
+
+@enduml
